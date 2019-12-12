@@ -1,0 +1,27 @@
+---
+title: "Network Analysis Using R"
+author: "Martin Schweinberger"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output:
+  bookdown::html_document2: default
+bibliography: bibliography.bib
+link-citations: yes
+---
+
+This document is the report for the *Network Analysis Using R* workshop at QUT, Brisbane, 20121212.
+
+
+of the adjective amplifier very in New Zealand English. The analysis was performed with the aim of fitting a model (generalized-linear binomial logistic mixed-effects regression) to explain which factors correlate with the use of very to ascertain if very is decreasing across apparent time and if this retreat is systematic or layered (which would imply that the use of very is stratified along linguistic and social lines) or unsystematic (which would imply that it correlates with few if any linguistic or social variables). 
+
+If you use this script or results thereof, please cite it as:
+Schweinberger, Martin. 2019. On the waning of forms - a corpus-based analysis of decline and loss in the New Zealand English amplifier system. 
+
+We will now begin with the analysis. In a first step, the session is prepared by clearing the workspace, setting options, activating packages and functions, as well as loading relevant functions.
+
+```{r nta_01, echo=T, eval = T, message=FALSE, warning=FALSE}
+
+```
+
+
+
+
