@@ -24,31 +24,264 @@ The *centrality of networks* is measured as
 
 There are two ways to capture the basic structure of a network
 * Adjacency matrix (Matrix of 0s and 1s depending on whether the nodes are connected or not)
-*Edge list (Two column matrix to indicate which nodes are connected)
 
 ```{r nta_intro_01, echo=F, eval = T, message=FALSE, warning=FALSE}
-edgelist <- matrix(c(A, A, A, A, A, ), ncol = 2)
+adjacencymatrix <- matrix(c(0,1,1,1,1,1,0,
+1,0,0,0,0,0,0,
+1,0,0,0,0,0,0,
+1,0,0,0,0,0,0,
+1,0,0,0,0,1,0,
+1,0,0,0,1,0,1,
+0,0,0,0,0,1,0), ncol = 7)
+colnames(adjacencymatrix) <- c("A", "B", "C", "D", "E", "F", "G")
+rownames(adjacencymatrix) <- c("A", "B", "C", "D", "E", "F", "G")
+adjacencymatrix
 ```
 
+*Edge list (Two column matrix to indicate which nodes are connected)
 
-## Example 
+```{r nta_intro_02, echo=F, eval = T, message=FALSE, warning=FALSE}
+edgelist <- matrix(c("A", "A", "A", "A", "A", "E", "F", "B", "C", "D", "E", "F", "F", "G"), ncol = 2)
+colnames(edgelist) <- c("V1", "V2")
+rownames(edgelist) <- NULL
+edgelist
+```
 
-Who is connected with whom on Twitter and who is the most cetral node in the network?
+The example that we will be concerned with is the Who is connected with whom on Twitter and who is the most cetral node in the network?
 
 Outline of the workshop
 * Install R and R Studio
 * Import data from Australian Twittershere
 * Tidy data
 
-
+# Network Analysis in R Using the igraph package
 
 We will now begin with the analysis. In a first step, the session is prepared by clearing the workspace, setting options, activating packages and functions, as well as loading relevant functions.
 
 ```{r nta_01, echo=T, eval = T, message=FALSE, warning=FALSE}
-# activate package
+# activate packages
+library(dplyr)
 library(igraph)
+# import data
+# Read in data from a .csv
+replies <- read.csv("data/query1_results_anon.csv",
+                    header = TRUE,
+                    fileEncoding = "UTF-8-BOM")
+# inspect data
+head(replies)
+```
+
+Take the data that was imported and create counts of the number of replies between users.
+
+```{r nta_02, echo=T, eval = T, message=FALSE, warning=FALSE}
+# create edge list
+reply_edges <- replies %>% 
+  group_by(original_tweet_user_id, reply_user_id) %>% 
+  summarise(nbr_replies = n())
+# inspect edge list
+head(reply_edges)
+```
+
+View the results (number of replies between users) to make sure it looks OK.  This will be used as input to create the igraph object and inspect the igraph object. The first number is the number of nodes and the second number is the number of edges.
+
+```{r nta_03, echo=T, eval = T, message=FALSE, warning=FALSE}
+# create igraph object using an edge list: reply_edges
+reply_g <- graph_from_data_frame(d = reply_edges, directed = TRUE)
+# inspect igraph properties
+reply_g
+```
+
+We will now plot the network diagram.
+
+```{r nta_04, echo=T, eval = T, message=FALSE, warning=FALSE}
+# default plot settings
+plot(reply_g)
+```
+
+That doesn't look good! So let's try removing the node (vertex) labels
+
+```{r nta_05, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA)
+```
+
+This plot look better, but the nodes are obscuring the arrows which is why we isolate the reflexive nodes in the edge list.
+
+```{r nta_06, echo=T, eval = T, message=FALSE, warning=FALSE}
+(reply_edges %>%
+    filter(as.character(original_tweet_user_id)
+        == as.character(reply_user_id)))
+```
+
+If we have time, we will remove these later btu for now, we will just  adjust the size and colour of the nodes.
+
+```{r nta_07, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = "SkyBlue2", vertex.size = 7)
+```
+
+Now we can see the arrows, but they need to be a little smaller which is why we  adjust the arrow size.
+
+```{r nta_08, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = "SkyBlue2", vertex.size = 7,
+     edge.arrow.size = 0.2)
+```
+
+We now adjust edge thicknessbut to do this, we first create a vector of edge weights based on number of replies and inspect the results.
+
+```{r nta_09, echo=T, eval = T, message=FALSE, warning=FALSE}
+weight1 <- E(reply_g)$nbr_replies
+# inspect results
+head(weight1)
+```
+
+We now plot the graph with the edge thickness determined by weights.
+
+```{r nta_10, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = "SkyBlue2", vertex.size = 7,
+     edge.arrow.size = 0.2, edge.width = weight1)
+```
+
+We are now in a position, where we can customize the layouts. The first layout is Kamada and Kawai layout (a type of radial layout).
+
+```{r nta_11, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = V(reply_g)$color, vertex.size = 7,
+     edge.arrow.size = 0.2, edge.width = weight1,
+     layout = layout.kamada.kawai)
+```
+
+The next layout is a circle layout.
+
+```{r nta_12, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = V(reply_g)$color, vertex.size = 7,
+     edge.arrow.size = 0.2, edge.width = weight1,
+     layout = layout.circle)
+```
+
+The next layout is a tree layout (dendogram).
+
+```{r nta_13, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = V(reply_g)$color, vertex.size = 7,
+     edge.arrow.size = 0.2, edge.width = weight1,
+     layout = layout.reingold.tilford)
+```
+
+We will now customize the layout and write layout nicely function but we first, save the results of the layout_nicely() function
+
+```{r nta_14, echo=T, eval = T, message=FALSE, warning=FALSE}
+nice_layout <- layout_nicely(reply_g)
+```
+
+We can now plot the network diagram specifying your saved output
+
+```{r nta_15, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = V(reply_g)$color, vertex.size = 7,
+     edge.arrow.size = 0.2, edge.width = weight1,
+     layout = nice_layout)
+```
+
+We will now check how to inspect the quantitative properties of networks. We start by extracting the node degree (total) from the igraph object and save it.
+
+```{r nta_16, echo=T, eval = T, message=FALSE, warning=FALSE}
+reply_g_degree <- degree(reply_g)
+```
+
+Next, we turn it into an easy to read data frame and sort it in descending order by degree and inspect the results.
+
+```{r nta_17, echo=T, eval = T, message=FALSE, warning=FALSE}
+reply_g_degree <- data.frame(user_id = names(reply_g_degree),
+                             degree = reply_g_degree,
+                             row.names = NULL) %>% 
+  arrange(desc(degree))
+
+# inspect results
+head(reply_g_degree)
+```
+
+Next, we check the *out degree* extract the out degree from the igraph object and save it.
+
+```{r nta_18, echo=T, eval = T, message=FALSE, warning=FALSE}
+reply_g_degree_out <- degree(reply_g, mode = "out")
+```
+
+Next, we turn it into an easy to read data frame and sort it in descending order by degree and inspect the results.
+
+```{r nta_19, echo=T, eval = T, message=FALSE, warning=FALSE}
+reply_g_degree_out <- data.frame(user_id = names(reply_g_degree_out),
+                                 out_degree = reply_g_degree_out,
+                                 row.names = NULL) %>% 
+  arrange(desc(out_degree))
+# inspect results
+head(reply_g_degree_out)
+```
+
+Next, we check the *in degree* and extract the in degree from the igraph object and save it.
+
+```{r nta_20, echo=T, eval = T, message=FALSE, warning=FALSE}
+reply_g_degree_in <- degree(reply_g, mode = "in")
+```
+
+Next, turn it into an easy to read data frame and sort it in descending order by degree.
+
+```{r nta_21, echo=T, eval = T, message=FALSE, warning=FALSE}
+reply_g_degree_in <- data.frame(user_id = names(reply_g_degree_in),
+                                in_degree = reply_g_degree_in,
+                                row.names = NULL) %>% 
+  arrange(desc(in_degree))
+# inspect results
+head(reply_g_degree_in)
+```
+
+Next, we use conditional colouring of nodes and highlight user "u085" who/which is the most central node.
+
+```{r nta_22, echo=T, eval = T, message=FALSE, warning=FALSE}
+V(reply_g)$color <- ifelse(
+  V(reply_g)$name == "u085", "red", "SkyBlue2"
+)
+```
+
+Now, we replot the graph to show the results.
+
+```{r nta_23, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = V(reply_g)$color, vertex.size = 7,
+     edge.arrow.size = 0.2, edge.width = weight1)
+```
+
+Now, we be filtering nodes and edges and return to our earlier network diagram results.
+
+```{r nta_24, echo=T, eval = T, message=FALSE, warning=FALSE}
+plot(reply_g, vertex.label = NA,
+     vertex.color = V(reply_g)$color, vertex.size = 7,
+     edge.arrow.size = 0.2, edge.width = weight1,
+     layout = nice_layout)
+```
+
+Recall that these are the accounts that have replied to themselves (reflexive nodes).
+
+```{r nta_25, echo=T, eval = T, message=FALSE, warning=FALSE}
+(reply_edges %>%
+    filter(as.character(original_tweet_user_id)
+        == as.character(reply_user_id)))
+```
+
+It turns out there is a very simple way to remove reflexive nodes in igraph: use the simplify function.
+
+```{r nta_26, echo=T, eval = T, message=FALSE, warning=FALSE}
+reply_g2 <- simplify(reply_g, remove.loops = TRUE)
+# plot the network diagram with reflexive edges removed
+plot(reply_g2, vertex.label = NA,
+     vertex.color = V(reply_g)$color, vertex.size = 7,
+     edge.arrow.size = 0.2, edge.width = weight1,
+     layout = nice_layout)
+
 ```
 
 
-
+We have reached the end of our analysis.
 
