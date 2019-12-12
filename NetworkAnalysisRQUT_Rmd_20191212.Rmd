@@ -8,18 +8,45 @@ bibliography: bibliography.bib
 link-citations: yes
 ---
 
+# Introduction
+
 This document is the report for the *Network Analysis Using R* workshop at QUT, Brisbane, 20121212.
 
+Networks, or graphs, consist of nodes (typically represented as dots) and edges (typically represented as lines) and they can be directed or undirected networks. In directed networks, the direction of edges is captured. For instance, the exports of countries. In such cases the lines are directed and typically have arrows to indicate direction. The thinkness of lines can also be ustilized to encode information such as frequency of contact.
 
-of the adjective amplifier very in New Zealand English. The analysis was performed with the aim of fitting a model (generalized-linear binomial logistic mixed-effects regression) to explain which factors correlate with the use of very to ascertain if very is decreasing across apparent time and if this retreat is systematic or layered (which would imply that the use of very is stratified along linguistic and social lines) or unsystematic (which would imply that it correlates with few if any linguistic or social variables). 
+Networks can have different layouts.
 
-If you use this script or results thereof, please cite it as:
-Schweinberger, Martin. 2019. On the waning of forms - a corpus-based analysis of decline and loss in the New Zealand English amplifier system. 
+The *centrality of networks* is measured as 
+* Node degree
+* Node closeness (the closer two nodes are, the closer connected ethy are)
+* Node betweeness
+* Edge betweenness
+
+There are two ways to capture the basic structure of a network
+* Adjacency matrix (Matrix of 0s and 1s depending on whether the nodes are connected or not)
+*Edge list (Two column matrix to indicate which nodes are connected)
+
+```{r nta_intro_01, echo=F, eval = T, message=FALSE, warning=FALSE}
+edgelist <- matrix(c(A, A, A, A, A, ), ncol = 2)
+```
+
+
+## Example 
+
+Who is connected with whom on Twitter and who is the most cetral node in the network?
+
+Outline of the workshop
+* Install R and R Studio
+* Import data from Australian Twittershere
+* Tidy data
+
+
 
 We will now begin with the analysis. In a first step, the session is prepared by clearing the workspace, setting options, activating packages and functions, as well as loading relevant functions.
 
 ```{r nta_01, echo=T, eval = T, message=FALSE, warning=FALSE}
-
+# activate package
+library(igraph)
 ```
 
 
